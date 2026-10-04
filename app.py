@@ -1,9 +1,9 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, abort
 from flask_cors import CORS
 import ast
 import math
 
-app = Flask(__name__, static_folder='.', static_url_path='')
+app = Flask(__name__, static_folder=None)
 CORS(app)  # Allow requests from frontend during development
 
 ALLOWED_NAMES = {
@@ -87,7 +87,7 @@ def safe_eval(expr, x, y):
 
         if isinstance(node, ast.Constant):
             if isinstance(node.value, (int, float)):
-                return node.value
+                return float(node.value)
             raise ValueError("Invalid constant in equation")
 
         raise ValueError("Invalid expression in equation")
@@ -175,6 +175,15 @@ def solve_euler():
         "final_y_rk4": y_rk4_values[-1],
         "steps": steps
     })
+
+
+ALLOWED_FILES = {"api.js", "euler-chart.js", "style.css", "ui.js", "validation.js"}
+
+@app.route("/<path:filename>")
+def assets(filename):
+    if filename in ALLOWED_FILES:
+        return send_from_directory('.', filename)
+    abort(404)
 
 @app.route("/health", methods=["GET"])
 def health():
